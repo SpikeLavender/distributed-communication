@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="distributed-io-common" />
+        <module name="distributed-io-client" />
+        <module name="distributed-io-server" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="common" target="1.8" />
+      <module name="distributed-communication" target="11" />
+      <module name="distributed-io" target="11" />
+      <module name="distributed-io-client" target="11" />
+      <module name="distributed-io-common" target="11" />
+      <module name="distributed-io-server" target="11" />
+      <module name="distributed-rpc" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+</project>
