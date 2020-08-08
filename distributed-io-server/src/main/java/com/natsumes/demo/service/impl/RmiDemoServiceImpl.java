@@ -20,8 +20,8 @@ public class RmiDemoServiceImpl extends UnicastRemoteObject implements RmiDemoSe
     public ResponseBody sendRequest(RequestBody request) throws RemoteException{
         System.out.println("this is the rmi server, handle " + request.getName());
         ResponseBody responseBody = new ResponseBody();
-        responseBody.setStatusCode(200);
-        responseBody.setMessage("success");
+        responseBody.setId(request.getId());
+        responseBody.setRespMsg("handle success");
         return responseBody;
     }
 }

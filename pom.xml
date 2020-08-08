@@ -15,6 +15,16 @@
 		<module>distributed-io-client</module>
 	</modules>
 
+	<dependencies>
+		<!--lombok start-->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.18.12</version>
+		</dependency>
+		<!--lombok end-->
+	</dependencies>
+
 	<build>
 		<plugins>
 			<plugin>

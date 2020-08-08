@@ -1,44 +1,18 @@
 package com.natsumes.demo.entity;
 
+import lombok.Data;
+
 import java.io.Serializable;
 
+@Data
 public class ResponseBody implements Serializable {
 
     private static final long serialVersionUID = -5176829430289351495L;
 
-    private Integer statusCode;
+    private String id;
 
-    private String message;
+    private String name;
 
-    public ResponseBody() {
-    }
+    private String respMsg;
 
-    public ResponseBody(Integer statusCode, String message) {
-        this.statusCode = statusCode;
-        this.message = message;
-    }
-
-    @Override
-    public String toString() {
-        return "ResponseBody{" +
-                "statusCode=" + statusCode +
-                ", message='" + message + '\'' +
-                '}';
-    }
-
-    public Integer getStatusCode() {
-        return statusCode;
-    }
-
-    public void setStatusCode(Integer statusCode) {
-        this.statusCode = statusCode;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
 }

@@ -1,23 +1,21 @@
 package com.natsumes.demo;
 
 import com.natsumes.demo.entity.RequestBody;
-import com.natsumes.demo.handler.RpcDemoClientHandler;
+import com.natsumes.demo.entity.ResponseBody;
 import com.natsumes.demo.handler.RpcReqClientHandler;
+import com.natsumes.demo.service.RpcDemoService;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.bytes.ByteArrayDecoder;
-import io.netty.handler.codec.bytes.ByteArrayEncoder;
-import io.netty.handler.codec.string.StringDecoder;
-import io.netty.handler.codec.string.StringEncoder;
+import io.netty.handler.codec.serialization.ClassResolvers;
+import io.netty.handler.codec.serialization.ObjectDecoder;
+import io.netty.handler.codec.serialization.ObjectEncoder;
 
 
 import java.lang.reflect.Proxy;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -27,20 +25,33 @@ public class RpcClient {
             Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
     //2.声明一个自定义事件处理器  RpcDemoClientHandler
-    private static ChannelInboundHandlerAdapter handlerAdapter;
+    private static RpcReqClientHandler rpcReqClientHandler;
 
-    private static RpcDemoClientHandler rpcDemoClientHandler;
+    private static Integer count = 0;
 
-    public static RpcReqClientHandler rpcReqClientHandler;
+    public static void main(String[] args) throws InterruptedException {
+        //1.创建代理对象
+        RpcDemoService service = (RpcDemoService) RpcClient.createProxy(RpcDemoService.class);
+        //2.循环给服务器写数据
+        while (true) {
+            count++;
+            RequestBody req = new RequestBody();
+            req.setId(UUID.randomUUID().toString());
+            req.setName(String.valueOf(count));
+            req.setReqMsg("数据信息: " + count);
 
-    private static Boolean status = true;
+            ResponseBody responseBody = service.sendRpcRequest(req);
+            System.out.println(responseBody);
+            Thread.sleep(2000);
+        }
+    }
+
 
     //3.编写方法，初始化客户端（创建连接池 bootStrap 设置bootStrap 连接服务器）
-    public static void initClient(Class<?> clazz) throws Exception {
+    private static void initClient() throws Exception {
 
         //初始化 RpcDemoClientHandler
-
-        handlerAdapter = (ChannelInboundHandlerAdapter) clazz.getDeclaredConstructor().newInstance();
+        rpcReqClientHandler = new RpcReqClientHandler();
 
         //创建连接池对象
         NioEventLoopGroup group = new NioEventLoopGroup();
@@ -59,11 +70,11 @@ public class RpcClient {
                         //获取ChannelPipeline
                         ChannelPipeline pipeline = ch.pipeline();
                         //设置编码
-                        pipeline.addLast(new StringEncoder());
-                        pipeline.addLast(new StringDecoder());
+                        pipeline.addLast(new ObjectEncoder());
+                        pipeline.addLast(new ObjectDecoder(1024* 1024,
+                                ClassResolvers.weakCachingConcurrentResolver(this.getClass().getClassLoader())));
                         //添加自定义事件处理器
-                        //pipeline.addLast(rpcDemoClientHandler);
-                        pipeline.addLast(handlerAdapter);
+                        pipeline.addLast(rpcReqClientHandler);
                     }
                 });
         //连接服务端
@@ -74,34 +85,14 @@ public class RpcClient {
     /**
      * 使用JDK的动态代理创建对象
      * @param serviceClass  接口类型，根据哪个接口生成子类代理对象
-     * @param providerParam 字符串 "RpcDemoService#sendRpcRequest#"
      * @return
      */
-    public static Object createProxy(Class<?> serviceClass, String providerParam) {
-        return Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(),
-                new Class[]{serviceClass}, (proxy, method, args) -> {
-                    //1.初始化客户端client
-                    if (rpcDemoClientHandler == null) {
-                        initClient(RpcDemoClientHandler.class);
-                        rpcDemoClientHandler = (RpcDemoClientHandler) handlerAdapter;
-                    }
-                    //2.给rpcDemoClientHandler设置参数
-                    rpcDemoClientHandler.setParam(providerParam + "are you ok?");
-                    //3.使用线程池，开启一个线程处理call()写操作，并返回结果
-                    @SuppressWarnings("unchecked")
-                    Object result = executorService.submit(rpcDemoClientHandler).get();
-                    //4.return结果
-                    return result;
-                });
-    }
-
-    public static Object createReqProxy(Class<?> serviceClass, String providerParam) {
+    public static Object createProxy(Class<?> serviceClass) {
         return Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(),
                 new Class[]{serviceClass}, (proxy, method, args) -> {
                     //1.初始化客户端client
                     if (rpcReqClientHandler == null) {
-                        initClient(RpcReqClientHandler.class);
-                        rpcReqClientHandler = (RpcReqClientHandler) handlerAdapter;
+                        initClient();
                     }
                     //2.给rpcDemoClientHandler设置参数
                     rpcReqClientHandler.setParam(args[0]);
@@ -112,4 +103,5 @@ public class RpcClient {
                     return result;
                 });
     }
+
 }

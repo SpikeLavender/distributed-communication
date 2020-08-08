@@ -8,6 +8,7 @@ import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.util.UUID;
 
 public class RMIClient {
 
@@ -15,8 +16,9 @@ public class RMIClient {
         RmiDemoService service = (RmiDemoService) Naming.lookup("rmi://127.0.0.1:37256/rmi-server");
 
         RequestBody requestBody = new RequestBody();
+        requestBody.setId(UUID.randomUUID().toString());
         requestBody.setName("mo-yu");
-        requestBody.setMessage("please handle this message");
+        requestBody.setReqMsg("please handle this message");
 
         ResponseBody responseBody = service.sendRequest(requestBody);
 

@@ -17,9 +17,9 @@ public class RpcReqClientHandler extends ChannelInboundHandlerAdapter implements
     //1.定义成员变量
     private ChannelHandlerContext context; //事件处理器上下文（存储handler信息，写操作）
 
-    private String result; // 记录服务器返回的数据
+    private ResponseBody resp; // 记录服务器返回的数据
 
-    private RequestBody param; //记录将要发送给服务器的数据
+    private RequestBody req; //记录将要发送给服务器的数据
 
     //2.实现channelActive 客户端和服务器连接时，该方法就自动执行
     @Override
@@ -33,7 +33,8 @@ public class RpcReqClientHandler extends ChannelInboundHandlerAdapter implements
     @Override
     public synchronized void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         //将读到的服务器的数据msg，设置为成员变量的值
-        result =  msg.toString();
+        resp = (ResponseBody) msg;
+        System.out.println("Client : " + resp.getId() + ", " + resp.getName() + ", " + resp.getRespMsg());
         notify();
     }
 
@@ -41,13 +42,20 @@ public class RpcReqClientHandler extends ChannelInboundHandlerAdapter implements
     @Override
     public synchronized Object call() throws Exception {
         //context给服务器写数据
-        context.writeAndFlush(param.toString());
+        //context.writeAndFlush(req);
+        context.writeAndFlush(req);
         wait();
-        return result;
+        return resp;
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        System.out.println(cause.getMessage());
+        ctx.close();
     }
 
     //5.设置参数的方法
     public void setParam(Object param) {
-        this.param = (RequestBody) param;
+        this.req = (RequestBody) param;
     }
 }
